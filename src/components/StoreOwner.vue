@@ -20,7 +20,8 @@
               <div class="box"><button v-on:click="manageStore(store)"> Manage Store</button></div>
             </div>
           </div>
-        </div>  
+        </div>
+        <div v-else>Wait for the administrator to approve your Store Owner request</div>        
     </div>
 </template>
 

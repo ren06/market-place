@@ -156,8 +156,8 @@ contract('MarketPlace', function(accounts) {
   it('7 Add store and add a product, remove it', async() => {
     console.log('7')
     const marketPlace = await MarketPlace.deployed();
-    const productPrice = web3.toBigNumber(1000000000000000000); //1 ETH in Wei
-    const productPrice2 = web3.toBigNumber(200000000000000000); //0.2 ETH in Wei
+    const productPrice = web3.toWei('1', 'ether');
+    const productPrice2 = web3.toWei('0.2', 'ether');
     const productQuantity = 30;
     const productQuantity2 = 20;
 
@@ -177,9 +177,9 @@ contract('MarketPlace', function(accounts) {
     await marketPlace.deleteProduct(0, 1, {gas: 50000, from: storeOwner1});
     await listProducts(storeOwner1, 0);
 
-    await marketPlace.addProduct(0, 'Product4', productPrice * 4, productQuantity, {from: storeOwner1})
+    await marketPlace.addProduct(0, 'Product4', productPrice, productQuantity, {from: storeOwner1})
 
-    await marketPlace.updateProduct(0, 0, 'Product1_Updated', productPrice * 5, productQuantity * 2, {from: storeOwner1})
+    await marketPlace.updateProduct(0, 0, 'Product1_Updated', productPrice, productQuantity, {from: storeOwner1})
     await listProducts(storeOwner1, 0);
     await listStores(storeOwner1);
   })
@@ -190,12 +190,14 @@ contract('MarketPlace', function(accounts) {
     let totalBought = 0;
     const productPrice = web3.toWei('1', 'ether');
     const productPrice2 = web3.toWei('0.2', 'ether');
+    console.log(productPrice)
 
     //Buy product 1
     const quantity = 5;
     const value = web3.toBigNumber(productPrice * quantity);
+    console.log(value.toString())
     totalBought += (productPrice * quantity);
-    await marketPlace.buyProduct(storeOwner1, 0, 0, quantity, {from: guest, value: value});
+    await marketPlace.buyProduct(storeOwner1, 0, 0, quantity, {from: guest, value: value.toString()});
     
     // //Buy product 2
     // let quantity2 = 10;
