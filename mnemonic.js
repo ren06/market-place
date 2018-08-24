@@ -1,1 +1,1 @@
-module.exports = 'ride alley hunt acid away limb matter robust rural salad educate width';
+module.exports = 'veteran priority grocery cube immune desert cry describe barely journey case adapt';

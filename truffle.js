@@ -1,5 +1,5 @@
 const HDWalletProvider = require('truffle-hdwallet-provider');
-const infuraApikey = 'nbCbdzC6IG9CF6hmvAVQ';
+const infuraApikey = 'f98ac603eda347f2bffa60230bbdd3eb';
 let mnemonic = require('./mnemonic');
 
 // Check gas prices before live deploy - https://ethgasstation.info/
@@ -52,7 +52,7 @@ module.exports = {
       gasPrice: 20000000000 // default = 100 gwei = 100000000000
     },
     rinkeby: {
-      provider: function () {
+      provider: function () { //rinkeby.infura.io/v3/f98ac603eda347f2bffa60230bbdd3eb
         return new HDWalletProvider(mnemonic, `https://rinkeby.infura.io/${infuraApikey}`);
       },
       network_id: 4,
