@@ -1,21 +1,22 @@
 <template>
     <div>
-        <button v-on:click="registerStoreOwner()">Register as a store owner</button>
-        <p> {{ requestStoreOwnerStatus }} </p>
-        <p> Welcome! Please pick a Store</p>
-        <!-- <button v-on:click="addStore()">Add new store</button> -->
+        <p> Welcome! <span style="font-size: 50%; vertical-align:middle;">({{ account }}) </span></p> 
+        <p style="font-size: 80%;">Please pick a Store or &nbsp;
+          <button v-show="!isLoaderVisible" class="btn" style="vertical-align:middle; font-size: 70%;" v-on:click="registerStoreOwner(storeOwnerName)">Register as a store owner</button>
+          <img class="loaderImg" style="position: static" v-show="isLoaderVisible" src="@/assets/loader.svg" />            
+          <input v-model="storeOwnerName">
+        </p>
         <div class="wrapper"> 
-        <div class="box">Index</div>
-        <div class="box">Description</div>
-        <div class="box">No. Products</div>
-        <div class="box"></div>
-        <div class="box"></div>
-        <div class="row" v-for="(store, index) in getStores" v-bind:key="index">
-            <div class="box">{{ store.index }}</div>
-            <div class="box">{{ store.description }}</div>
-            <div class="box">{{ store.numberProducts }}</div>
-            <div class="box"><button v-on:click="viewProducts(store)">View Products</button></div>
-        </div>
+          <div class="box">Index</div>
+          <div class="box">Description</div>
+          <div class="box">No. Products</div>
+          <div class="box"></div>
+          <div class="row" v-for="(store, index) in getStores" v-bind:key="index">
+              <div class="box">{{ store.index }}</div>
+              <div class="box">{{ store.description }}</div>
+              <div class="box">{{ store.numberProducts }}</div>
+              <div class="box"><button v-on:click="viewProducts(store)">View Products</button></div>
+          </div>
         </div>        
     </div>
 </template>
@@ -34,21 +35,21 @@ export default {
     },
     data() { //used by v-model
         return {
+            storeOwnerName: 'Mr. StoreOwner'
         }
     },
     components: { },
     computed: {
-        //mapState helper to directly access the data contained in the state.
-        ...mapState(['requestStoreOwnerStatus', 'userRole']),
-        //if there is some logic on the state itself, use a getter:
+        ...mapState(['requestStoreOwnerStatus', 'userRole', 'account', 'isLoaderVisible']),
         ...mapGetters(['getUserRole', 'getStores'])
     },
     methods: {
-        ...mapMutations(['storeOwnerState/SET_CURRENT_STORE']),
+        ...mapMutations(['storeOwnerState/SET_CURRENT_STORE', 'SET_IS_LOADER_VISIBLE']),
         ...mapActions(['ACTION_REQUEST_STORE_OWNER']),
-        registerStoreOwner: function () {
+        registerStoreOwner: function (storeOwnerName) {
+            this.SET_IS_LOADER_VISIBLE(true);
             console.log('inside Method registerStoreOwner')
-            this.ACTION_REQUEST_STORE_OWNER();
+            this.ACTION_REQUEST_STORE_OWNER(storeOwnerName);
         },
         viewProducts(store){
             console.log(store.description);
@@ -62,13 +63,13 @@ export default {
 <style scoped>
 .wrapper {
   display: grid;
-  grid-template-columns: repeat(6, 1fr)
+  grid-template-columns: repeat(4, 1fr)
 }
 
 .row {
   grid-column: 1 / -1;
   display: grid;
-  grid-template-columns: repeat(6, 1fr)
+  grid-template-columns: repeat(4, 1fr)
 }
 
 .box {

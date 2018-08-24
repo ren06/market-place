@@ -1,7 +1,7 @@
 {
-  "name": "test",
+  "name": "MarketPlace",
   "version": "1.0.0",
-  "description": "Test",
+  "description": "Market Place on the ETH blockchain",
   "author": "Renaud Theuillon <rtheuillon@hotmail.com>",
   "private": true,
   "scripts": {

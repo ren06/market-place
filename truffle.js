@@ -5,9 +5,6 @@ let mnemonic = require('./mnemonic');
 // Check gas prices before live deploy - https://ethgasstation.info/
 
 module.exports = {
-  mocha: {
-    useColors: true
-  },
   solc: {
     optimizer: {
       enabled: true,
@@ -39,13 +36,13 @@ module.exports = {
       gas: 4075039, // default = 4712388
       gasPrice: 1500000000 // default = 100 gwei = 100000000000
     },
-    coverage: {
-      host: "localhost",
-      network_id: "*",
-      port: 8555,         // <-- If you change this, also set the port option in .solcover.js.
-      gas: 0xfffffffffff, // <-- Use this high gas value
-      gasPrice: 0x01      // <-- Use this low gas price
-    },
+    // coverage: {
+    //   host: "localhost",
+    //   network_id: "*",
+    //   port: 8555,         // <-- If you change this, also set the port option in .solcover.js.
+    //   gas: 0xfffffffffff, // <-- Use this high gas value
+    //   gasPrice: 0x01      // <-- Use this low gas price
+    // },
     ropsten: {
       provider: function () {
         return new HDWalletProvider(mnemonic, `https://ropsten.infura.io/${infuraApikey}`);

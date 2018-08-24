@@ -1,6 +1,13 @@
 import router from '../router';
 import web3 from 'web3';
 
+let LogStoreOwnerWithdraw = null;
+let LogUserBuyProduct = null;
+let LogStoreOwnerUpdateProduct = null;
+let LogStoreOwnerDeleteProduct = null;
+let LogStoreOwnerAddProduct = null;
+let LogStoreOwnerAddStore = null;
+
 const storeOwnerStateModule = {
   namespaced: true,
   state: {    
@@ -91,7 +98,7 @@ const storeOwnerStateModule = {
       rootState.MarketPlace.deployed().then((contract) => {
         // console.log(`Buying ${quantity} product(s) of Owner ${product.storeOwnerAddress} Store ${product.storeIndex} Product ${product.index}`);        
       
-        const withdrawAmountWei = web3.utils.toBN(web3.utils.toWei(withdrawAmount, 'ether')).toString();
+        const withdrawAmountWei = web3.utils.toBN(web3.utils.toWei(withdrawAmount.toString(), 'ether')).toString();
         console.log(storeIndex, withdrawAmountWei);
         contract.storeOwnerWithdraw(storeIndex, withdrawAmountWei, {from: rootState.account, gas: 100000}).then((result) => {
           console.log('storeOwnerWithdraw function call mined', result);
@@ -100,21 +107,24 @@ const storeOwnerStateModule = {
           console.log(err);
         });
   
-        const LogStoreOwnerWithdraw = contract.LogStoreOwnerWithdraw();
-  
-        LogStoreOwnerWithdraw.watch(function(error, result) {
-          if (error) {
-            console.log(error);
-          } else {              
-            console.log('LogStoreOwnerWithdraw event caught', result);
-            commit('SET_INFO_MESSAGE', 'Withdrawing completed', { root: true });
-            let store = state.currentStore;
-            const balanceLeft = result.args.balanceLeft; //BigNumber
-            store.balanceWei = balanceLeft.toNumber();
-            store.balanceEth = web3.utils.fromWei(balanceLeft.toString(), 'ether');
-            commit('SET_CURRENT_STORE', store);
-          }
-        });
+        if (!LogStoreOwnerWithdraw) {
+          LogStoreOwnerWithdraw = contract.LogStoreOwnerWithdraw();
+    
+          LogStoreOwnerWithdraw.watch(function(error, result) {
+            if (error) {
+              console.log(error);
+            } else {              
+              console.log('LogStoreOwnerWithdraw event caught', result);
+              commit('SET_INFO_MESSAGE', 'Withdrawing completed!', { root: true });
+              commit('SET_IS_LOADER_VISIBLE', false, { root: true });
+              let store = state.currentStore;
+              const balanceLeft = result.args.balanceLeft; //BigNumber
+              store.balanceWei = balanceLeft.toNumber();
+              store.balanceEth = web3.utils.fromWei(balanceLeft.toString(), 'ether');
+              commit('SET_CURRENT_STORE', store);
+            }
+          });
+        }
       });      
     },
     ACTION_SET_CURRENT_STORE_OWNER: ({commit, rootState, state}) => {
@@ -151,50 +161,57 @@ const storeOwnerStateModule = {
           console.log(err);
         });
 
-        const LogUserBuyProduct = contract.LogUserBuyProduct();
+        if (!LogUserBuyProduct) {
+          LogUserBuyProduct = contract.LogUserBuyProduct();
 
-        LogUserBuyProduct.watch(function(error, result) {
-          if (error) {
-            console.log(error);
-          } else {              
-            console.log('LogUserBuyProduct event caught', result);
-            product.quantity = Number(result.args.quantityLeft);
-            
-            //update quantity
-            commit('SET_CURRENT_PRODUCT', product);
-            //tell user the purchase went fine
-            commit('SET_INFO_MESSAGE', `${quantity} ${product.description} bought successfuly!`, { root: true })         
-          }
-        });
+          LogUserBuyProduct.watch(function(error, result) {
+            if (error) {
+              console.log(error);
+            } else {              
+              console.log('LogUserBuyProduct event caught', result);
+              product.quantity = Number(result.args.quantityLeft);
+              
+              //update quantity
+              commit('SET_CURRENT_PRODUCT', product);
+              //tell user the purchase went fine
+              commit('SET_INFO_MESSAGE', `${quantity} ${product.description} bought successfuly!`, { root: true });
+              commit('SET_IS_LOADER_VISIBLE', false, { root: true });
+            }
+          });
+        }
       });      
     },
-    ACTION_UPDATE_PRODUCT: ({dispatch, rootState, state}) => {
+    ACTION_UPDATE_PRODUCT: ({dispatch, rootState, state, commit}) => {
       console.log('inside ACTION_UPDATE_PRODUCT')     
       rootState.MarketPlace.deployed().then((contract) => {
-        console.log('updating Prodcut with:', state.currentStore.index, state.currentProduct.index, state.currentProduct.description, 
-          state.currentProduct.price, state.currentProduct.quantity);
-        
+        console.log('updating Product with:', state.currentStore.index, state.currentProduct.index, state.currentProduct.description, 
+          state.currentProduct.priceEth, state.currentProduct.quantity);
+        const priceWei = web3.utils.toWei(state.currentProduct.priceEth.toString(), 'ether');
         contract.updateProduct(state.currentStore.index, state.currentProduct.index, state.currentProduct.description, 
-          state.currentProduct.price, state.currentProduct.quantity, { gas: 100000, from: rootState.account }).then((result) => {
+          priceWei, state.currentProduct.quantity, { gas: 100000, from: rootState.account }).then((result) => {
           console.log('updateProduct function call mined', result);
         }).catch((err) => {
           console.log(err);
         });
 
-        const LogStoreOwnerUpdateProduct = contract.LogStoreOwnerUpdateProduct();
+        if (!LogStoreOwnerUpdateProduct) {
+          LogStoreOwnerUpdateProduct = contract.LogStoreOwnerUpdateProduct();
 
-        LogStoreOwnerUpdateProduct.watch(function(error, result) {
-          if (error) {
-            console.log(error);
-          } else {
-            console.log('LogStoreOwnerUpdateProduct event caught', result);
-            dispatch('ACTION_SET_PRODUCTS', rootState.account);
-            router.replace({ name: 'store' });
-          }
-        });
+          LogStoreOwnerUpdateProduct.watch(function(error, result) {
+            if (error) {
+              console.log(error);
+            } else {
+              console.log('LogStoreOwnerUpdateProduct event caught', result);
+              commit('SET_INFO_MESSAGE', 'Product updated!', { root: true })                
+              dispatch('ACTION_SET_PRODUCTS', rootState.account);
+              commit('SET_IS_LOADER_VISIBLE', false, { root: true });              
+              //router.replace({ name: 'store-owner-store' });
+            }
+          });
+        }
       });  
     },    
-    ACTION_DELETE_PRODUCT: ({dispatch, rootState, state}) => {
+    ACTION_DELETE_PRODUCT: ({dispatch, rootState, state, commit}) => {
       console.log('inside ACTION_DELETE_PRODUCT')     
       rootState.MarketPlace.deployed().then((contract) => {
         // deleteProduct(uint storeIndex, uint productIndex) 
@@ -203,19 +220,23 @@ const storeOwnerStateModule = {
         }).catch((err) => {
           console.log(err);
         });
-        const LogStoreOwnerDeleteProduct = contract.LogStoreOwnerDeleteProduct();
-        LogStoreOwnerDeleteProduct.watch(function(error, result) {
-          if (error) {
-            console.log(error);
-          } else {
-            console.log('LogStoreOwnerDeleteProduct event caught', result);
-            dispatch('ACTION_SET_PRODUCTS', rootState.account);
-            router.replace({ name: 'store' });
-          }
-        });
+
+        if (!LogStoreOwnerDeleteProduct) {
+          LogStoreOwnerDeleteProduct = contract.LogStoreOwnerDeleteProduct();
+          LogStoreOwnerDeleteProduct.watch(function(error, result) {
+            if (error) {
+              console.log(error);
+            } else {
+              console.log('LogStoreOwnerDeleteProduct event caught', result);
+              dispatch('ACTION_SET_PRODUCTS', rootState.account);
+              commit('SET_IS_LOADER_VISIBLE', false, { root: true });
+              router.replace({ name: 'store-owner-store' });
+            }
+          });
+        }
       });  
     },      
-    ACTION_ADD_PRODUCT: ({dispatch, rootState, state}, payload) => {
+    ACTION_ADD_PRODUCT: ({dispatch, rootState, state, commit}, payload) => {
       console.log('inside ACTION_ADD_PRODUCT')     
       rootState.MarketPlace.deployed().then((contract) => {
         //addProduct(uint storeIndex, string description, uint price, uint quantity)
@@ -227,15 +248,19 @@ const storeOwnerStateModule = {
         }).catch((err) => {
           console.log(err);
         });
-        const LogStoreOwnerAddProduct = contract.LogStoreOwnerAddProduct();
-        LogStoreOwnerAddProduct.watch(function(error, result) {
-          if (error) {
-            console.log(error);
-          } else {
-            console.log('LogStoreOwnerAddProduct event caught', result);
-            dispatch('ACTION_SET_PRODUCTS', rootState.account);
-          }
-        });
+
+        if (!LogStoreOwnerAddProduct) {
+          LogStoreOwnerAddProduct = contract.LogStoreOwnerAddProduct();
+          LogStoreOwnerAddProduct.watch(function(error, result) {
+            if (error) {
+              console.log(error);
+            } else {
+              console.log('LogStoreOwnerAddProduct event caught', result);
+              commit('SET_IS_LOADER_VISIBLE', false, { root: true });
+              dispatch('ACTION_SET_PRODUCTS', rootState.account);
+            }
+          });
+        }
       });
     },    
     ACTION_SET_PRODUCTS: ({commit, rootState, state}, storeOwnerAddress) => {
@@ -259,7 +284,7 @@ const storeOwnerStateModule = {
       });  
     },
     /**** STORES ****/
-    ACTION_ADD_STORE: ({dispatch, rootState}, storeName) => {
+    ACTION_ADD_STORE: ({dispatch, rootState, commit}, storeName) => {
       console.log('inside ACTION_ADD_STORE')     
       //function addStore(string description) public isActiveStoreOwner returns (uint storeIndex){   
       console.log(storeName);
@@ -270,15 +295,19 @@ const storeOwnerStateModule = {
           console.log(err);
           console.log('Is the Store Owner Active?');
         });
-        const LogStoreOwnerAddStore = contract.LogStoreOwnerAddStore();
-        LogStoreOwnerAddStore.watch(function(error, result) {
-          if (error) {
-            console.log(error);
-          } else {
-            console.log('LogStoreOwnerAddStore event caught', result);
-            dispatch('ACTION_SET_STORES');
-          }
-        });
+
+        if (!LogStoreOwnerAddStore) {
+          LogStoreOwnerAddStore = contract.LogStoreOwnerAddStore();
+          LogStoreOwnerAddStore.watch(function(error, result) {
+            if (error) {
+              console.log(error);
+            } else {
+              console.log('LogStoreOwnerAddStore event caught', result);
+              commit('SET_IS_LOADER_VISIBLE', false, { root: true });              
+              dispatch('ACTION_SET_STORES');
+            }
+          });
+        }
       });  
     },    
     ACTION_SET_STORES: ({commit, rootState}) => {

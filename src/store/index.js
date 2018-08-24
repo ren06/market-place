@@ -9,6 +9,10 @@ import marketPlaceJson from '../../build/contracts/MarketPlace.json';
 import storeOwnerState from './store-owner';
 
 const MarketPlace = truffleContract(marketPlaceJson);
+//Declaring events to register them only once
+let LogAdminAddAdmin = null;
+let LogStoreOwnerStatusChanged = null;
+let LogStoreOwnerRequest = null;
 
 Vue.use(Vuex);
 
@@ -29,10 +33,10 @@ const store = new Vuex.Store({
     administrators: [],
     //UI stuff
     currentValue: '',
-    requestStoreOwnerStatus: '',
     storeOwners: [],
     stores: [],
-    infoMessage: ''
+    infoMessage: '',
+    isLoaderVisible: false
   },
   getters: {
     getStores: (state) => {
@@ -67,6 +71,9 @@ const store = new Vuex.Store({
     },    
   },
   mutations: {
+    SET_IS_LOADER_VISIBLE: (state, value) => {
+      state.isLoaderVisible = value;
+    },
     SET_ADMINISTRATORS: (state, administrators) => {
       //clear array first
       while (state.administrators.length > 0) {
@@ -136,25 +143,34 @@ const store = new Vuex.Store({
   actions: {
     ACTION_ADD_ADMINISTRATOR : ({ commit, state, dispatch }, newAdminAddress) => {
       console.log('inside ACTION_ADD_ADMINISTRATOR')     
-      rootState.MarketPlace.deployed().then((contract) => {
-        //addProduct(uint storeIndex, string description, uint price, uint quantity)
-        console.log('current store index', state.currentStore.index, payload);
-        const price = web3.utils.toWei(payload.price.toString(), 'ether');
-        contract.addProduct(state.currentStore.index, payload.description, price, payload.quantity,
-          { from: rootState.account, gas: 1000000 }).then((result) => {
+
+      state.MarketPlace.deployed().then((contract) => {
+
+        //Register event once
+        if(!LogAdminAddAdmin){
+          console.log('registering LogAdminAddAdmin');
+          LogAdminAddAdmin = contract.LogAdminAddAdmin();
+
+          LogAdminAddAdmin.watch(function(error, result){
+            if (error) {
+              console.log(error);
+            } else {
+              console.log('LogAdminAddAdmin event caught', result);
+              //refresh content
+              console.log('New admin:', result.args.adminAddress);
+              commit('SET_IS_LOADER_VISIBLE', false);
+              dispatch('ACTION_SET_ADMINISTRATORS');
+            }
+          });
+        }
+
+        contract.addAdministrator(newAdminAddress,
+          { from: state.account, gas: 1000000 }).then((result) => {
           console.log('addProduct function call mined', result);
         }).catch((err) => {
           console.log(err);
         });
-        const LogStoreOwnerAddProduct = contract.LogStoreOwnerAddProduct();
-        LogStoreOwnerAddProduct.watch(function(error, result) {
-          if (error) {
-            console.log(error);
-          } else {
-            console.log('LogStoreOwnerAddProduct event caught', result);
-            dispatch('ACTION_SET_PRODUCTS', rootState.account);
-          }
-        });
+
       });    
     },
     ACTION_SET_ADMINISTRATORS: ({ commit, state, dispatch }) => {
@@ -169,9 +185,11 @@ const store = new Vuex.Store({
             Promise.all(promises).then(function(administrators) {
               let allAdministrators = []
               for(const admin of administrators) {
+                console.log(admin);
                 allAdministrators.push({
+                  index: admin[0],
                   address: admin[1],
-                  isOwner: false
+                  isOwner: admin[2]
                 });
               }
               commit('SET_ADMINISTRATORS', allAdministrators);
@@ -237,17 +255,21 @@ const store = new Vuex.Store({
       
       payload.status === false ? methodName = 'activateStoreOwner': methodName = 'deactivateStoreOwner';      
       state.MarketPlace.deployed().then((contract) => {
-        contract[methodName](payload.storeOwnerAddress,{ from: state.account }).then((result) => {
+        contract[methodName](payload.storeOwnerAddress,{ from: state.account, gas: 1000000 }).then((result) => {
           console.log('block mined', result);
         }).catch((err) => {
           console.log(err);
         });
-        const LogStoreOwnerStatusChanged = contract.LogStoreOwnerStatusChanged();
-  
-        LogStoreOwnerStatusChanged.watch(function(error, result){
-          console.log('LogStoreOwnerStatusChanged caught', result);
-          dispatch('ACTION_SET_STORE_OWNERS');
-        });
+
+        if(!LogStoreOwnerStatusChanged){
+          LogStoreOwnerStatusChanged = contract.LogStoreOwnerStatusChanged();
+    
+          LogStoreOwnerStatusChanged.watch(function(error, result){
+            console.log('LogStoreOwnerStatusChanged caught', result);
+            commit('SET_IS_LOADER_VISIBLE', false);
+            dispatch('ACTION_SET_STORE_OWNERS');
+          });
+        }
       });  
     },    
     ACTION_SET_STORE_OWNERS: ({commit, state}) => {
@@ -289,19 +311,23 @@ const store = new Vuex.Store({
             });
         });    
     },
-    ACTION_REQUEST_STORE_OWNER: ({ commit, state, dispatch }, value) => {
+    ACTION_REQUEST_STORE_OWNER: ({ commit, state, dispatch }, name) => {
       console.log('inside ACTION_REQUEST_STORE_OWNER')
       state.MarketPlace.deployed().then((contract) => {
-        contract.requestStoreOwner("Renaud Theuillon", { from: state.account }).then((result) => {
+
+        contract.requestStoreOwner(name, { from: state.account }).then((result) => {
           console.log('block mined', result);
         }).catch((err) => {
           console.log(err);
         });
-        const LogStoreOwnerRequest = contract.LogStoreOwnerRequest();
-        LogStoreOwnerRequest.watch(function(error, result){
-            console.log('LogStoreOwnerRequest event caught', result);
-            dispatch('ACTION_SET_USER_ROLE');
-        });
+        if(!LogStoreOwnerRequest){
+          LogStoreOwnerRequest = contract.LogStoreOwnerRequest();
+          LogStoreOwnerRequest.watch(function(error, result){
+              console.log('LogStoreOwnerRequest event caught', result);
+              commit('SET_IS_LOADER_VISIBLE', false);
+              dispatch('ACTION_SET_USER_ROLE');
+          });
+        }
       });      
     },         
     ACTION_GET_CURRENT_NETWORK: ({commit, dispatch, state}) => {
@@ -325,9 +351,17 @@ const store = new Vuex.Store({
     },
     ACTION_INIT_APP: ({commit, dispatch, state}, web3) => {
       //dispatch('ACTION_GET_USD_PRICE');
+    
+      console.log(MarketPlace);
+      console.log(web3.version);
+      
+      console.log(web3.currentProvider);
 
-      // NON-ASYNC action - set web3 provider on init
       MarketPlace.setProvider(web3.currentProvider);
+      console.log(MarketPlace.web3.version.api);
+
+      //NOTE: it looks like Metamask and node modules are Web3 1.00-betaX 
+      //but initialising the contract object with truffleContract passes it web3 0.20.x
 
       //dirty hack for web3@1.0.0 support for localhost testrpc, see https://github.com/trufflesuite/truffle-contract/issues/56#issuecomment-331084530
       if (typeof MarketPlace.currentProvider.sendAsync !== "function") {
@@ -340,6 +374,7 @@ const store = new Vuex.Store({
 
       // Set the web3 instance
       commit('SET_WEB3', web3);
+      console.log('Web3 version', web3.version);
       commit('SET_CONTRACT', MarketPlace);
 
       // Find current network

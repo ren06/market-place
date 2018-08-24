@@ -1,27 +1,36 @@
 <template>
     <div>
-        <h4>{{ getUserRole }} Menu</h4>
-        <h5> Store Owners </h5>
+        <p>{{ getUserRole }} Menu <span style="font-size: 50%; vertical-align:middle;">({{ account }}) </span></p>
+        <p style="font-size: 80%;"> Store Owners </p>
         <div class="wrapper">
           <div class="box">Index</div>
           <div class="box">Name</div>
           <div class="box">Address</div>
           <div class="box">No. Stores</div>
           <div class="box">Status</div>
+          <div class="box"></div>
           <div class="row" v-for="(storeOwner, index) in getStoreOwners" v-bind:key="index">
             <div class="box">{{ storeOwner.index }}</div>
             <div class="box">{{ storeOwner.name }}</div>
             <div class="box">{{ storeOwner.address }}</div>
             <div class="box">{{ storeOwner.numberStores }}</div>
-            <div class="box"><button v-on:click="toggleStoreOwnerStatus(storeOwner.address, storeOwner.active)"> {{ storeOwner.active? 'Deactivate' : 'Activate' }}</button></div>
+            <div class="" style="position:relative">
+              <button v-show="!isLoaderVisible" class="btn" v-on:click="toggleStoreOwnerStatus(storeOwner.address, storeOwner.active)"> {{ storeOwner.active? 'Deactivate' : 'Activate' }}</button>
+              <img class="loaderImg2" align="middle" v-show="isLoaderVisible" src="@/assets/loader.svg" />
+            </div>
            </div>
         </div>
-        <h5> Administrators </h5>
-        <input v-model="newAdminAddress"><button v-on:click="addAdministrator(newAdminAddress)">Add Administrator</button>
+        <p style="font-size: 80%;">Administrators</p>
+        <div style="position:relative">
+          <input size="40" v-model="newAdminAddress">
+          <button v-show="!isLoaderVisible" class="btn" v-on:click="addAdministrator(newAdminAddress)">Add Administrator</button>
+          <img class="loaderImg" v-show="isLoaderVisible" src="@/assets/loader.svg" />
+        </div>
         <div class="wrapper2">
           <div class="box">Address</div>
-          <div class="box">Status</div>
+          <div class="box">Is owner?</div>
           <div class="row2" v-for="(admin, index) in administrators" v-bind:key="index">
+            <!-- <div class="box">{{ admin.index }}</div> -->
             <div class="box">{{ admin.address }}</div>
             <div class="box">{{ admin.isOwner }}</div>
           </div>
@@ -40,21 +49,23 @@ export default {
   },
   data() {
     return {
-      newAdminAddress: ''
+      newAdminAddress: '0x1100647062f4c3fEf846C5bd4acA8F8a260F93ec'
     }
   },  
   computed: {
-    ...mapState(['administrators']),
+    ...mapState(['administrators', 'isLoaderVisible', 'account']),
     ...mapGetters(['getUserRole', 'getStoreOwners'])
   },  
   methods: {
-    ...mapMutations([]),    
-    ...mapActions(['ACTION_SET_STORE_OWNER_STATUS', 'ACTION_SET_ADMINISTRATORS']),
+    ...mapMutations(['SET_IS_LOADER_VISIBLE']),    
+    ...mapActions(['ACTION_SET_STORE_OWNER_STATUS', 'ACTION_SET_ADMINISTRATORS', 'ACTION_ADD_ADMINISTRATOR']),
     toggleStoreOwnerStatus: function (storeOwnerAddress, status) {
+      this.SET_IS_LOADER_VISIBLE(true);
       this.ACTION_SET_STORE_OWNER_STATUS({storeOwnerAddress, status});
     },
     addAdministrator: function(newAdminAddress) {
       this.ACTION_ADD_ADMINISTRATOR(newAdminAddress);
+      this.SET_IS_LOADER_VISIBLE(true);
       newAdminAddress = '';
     }
   }
@@ -64,13 +75,13 @@ export default {
 <style scoped>
 .wrapper {
   display: grid;
-  grid-template-columns: 50px 250px 400px 50px 100px
+  grid-template-columns: 50px 250px 400px 50px 100px 40px
 }
 
 .row {
   grid-column: 1 / -1;
   display: grid;
-  grid-template-columns: 50px 250px 400px 50px 100px
+  grid-template-columns: 50px 250px 400px 50px 100px 40px
 }
 
 .wrapper2 {
@@ -88,4 +99,5 @@ export default {
   padding: 20px;
   font-size: 50%;
 }
+
 </style>

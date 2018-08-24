@@ -18,7 +18,7 @@ const getNetIdString = () => {
           return 'loading..';
         // Will be some random number when connected locally
         default:
-          return 'Local';
+          return 'Ganache';
       }
     });
 };

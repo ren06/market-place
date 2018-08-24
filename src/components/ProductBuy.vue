@@ -1,8 +1,7 @@
 <template>
     <div>
-        <h4>{{ getUserRole }}</h4>
-        <p><u>Product {{ currentProduct.description }} of Store {{ currentStore.description }} </u><button v-on:click="back()">Back</button></p>     
-        <div> {{ infoMessage }} </div>
+        <p><u>Product {{ currentProduct.description }} of Store {{ currentStore.description }}</u><button v-on:click="back()">Go Back</button></p>     
+        <div class="infoMessage"> {{ infoMessage }} </div>
         <div class="wrapper"> 
             <div class="row"></div> 
               <div class="box">Description</div>
@@ -18,8 +17,12 @@
               <div class="box">{{ currentProduct.quantity }}</div>     
             <div class="row"></div>
               <div class="box">Quantity</div>
-              <div class="box"><input v-model="cartQuantity"></div>                 
-              <div class="box"><button v-on:click="buyProduct(currentProduct, cartQuantity)">Buy</button></div>
+              <div class="box"><input v-model="cartQuantity"></div>
+              <div class="box" style="position:relative">
+                <button v-show="!isLoaderVisible" class="btn" v-on:click="buyProduct(currentProduct, cartQuantity)">Buy</button>
+                <img class="loaderImg2" align="middle" v-show="isLoaderVisible" src="@/assets/loader.svg" />
+              </div>              
+              <!-- <div class="box"><button v-on:click="buyProduct(currentProduct, cartQuantity)">Buy</button></div> -->
         </div>
        
     </div>
@@ -41,7 +44,7 @@ export default {
   },  
   computed: {
     ...mapState('storeOwnerState', ['currentStore', 'currentProduct']),
-    ...mapState(['infoMessage']),
+    ...mapState(['infoMessage', 'isLoaderVisible']),
     ...mapGetters(['getUserRole']),
     ...mapGetters('storeOwnerState', ['getProducts', 'getCurrentStoreProducts']),
     description: {
@@ -71,11 +74,13 @@ export default {
   },  
   methods: {
     ...mapMutations('storeOwnerState', ['UPDATE_FIELD_CURRENT_PRODUCT']),
-    ...mapMutations(['SET_INFO_MESSAGE']),
+    ...mapMutations(['SET_INFO_MESSAGE', 'SET_IS_LOADER_VISIBLE']),
     ...mapActions([
       'storeOwnerState/ACTION_BUY_PRODUCT'
     ]),
     buyProduct: function (product, quantity) {
+      this.SET_INFO_MESSAGE('');
+      this.SET_IS_LOADER_VISIBLE(true);
       this.$store.dispatch('storeOwnerState/ACTION_BUY_PRODUCT', { product, quantity });
     },
     back: function() {
@@ -90,26 +95,16 @@ export default {
 <style scoped>
 .wrapper {
   display: grid;
-  /* grid-template-columns: repeat(3, minmax(50px, 1fr)); */
-  grid-template-columns: repeat(5, 1fr)
-  /* background-color: #fff;
-  color: #444;*/
-  /* max-width: 800px;  */
+  grid-template-columns: repeat(3, 1fr)
 }
 
 .row {
   grid-column: 1 / -1;
   display: grid;
-  grid-template-columns: repeat(5, 1fr)
+  grid-template-columns: repeat(3, 1fr)
 }
 
-/* div:nth-child(4) { grid-row-start: 2; }
-div:nth-child(5) { grid-row-start: 3; } */
-
 .box {
-  /* background-color: #444;
-  color: #fff; */
-  /* border-radius: 5px; */
   padding: 20px;
   font-size: 50%;
 }

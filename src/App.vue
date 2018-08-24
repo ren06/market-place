@@ -1,7 +1,10 @@
 <template>
   <div id="app">
     <div class="container">
-      <div class="header">MarketPlace</div>
+      <div class="header">
+        <h3>Market Place</h3> 
+        <p style="font-size: 50%" >&nbsp; on {{ currentNetwork }}</p>
+      </div>
       <div class="left"></div>
       <div class="content">
         <router-view></router-view>
@@ -15,15 +18,14 @@
 <script>
 /* global web3:true */
 import Web3 from 'web3';
-//import {mapGetters, mapState} from 'vuex';
+import { mapState } from 'vuex';
 
 export default {
   name: 'app',
   components: {
   },
   computed: {
-  //   ...mapGetters([]),
-  //   ...mapState(['assetsPurchasedByAccount']),
+    ...mapState(['currentNetwork'])
   },
   mounted () {
     console.log('App.vue Mounted');    
@@ -34,6 +36,7 @@ export default {
     // Checking if Web3 has been injected by the browser (Mist/MetaMask)
     if (typeof web3 !== 'undefined') {
       bootStrappedWeb3 = new Web3(web3.currentProvider);
+      console.log(bootStrappedWeb3.version);
     } else {
       console.log('No web3! You should consider trying MetaMask or an Ethereum browser');
       console.log('Falling back to using HTTP Provider');
@@ -50,6 +53,44 @@ export default {
 </script>
 
 <style>
+.btn {
+  /* default for <button>, but useful for <a> */
+  display: inline-block;
+  text-align: center;
+  text-decoration: none;
+  min-width: 80px;
+  /* create a small space when buttons wrap on 2 lines */
+  margin: 2px 0;
+
+  /* invisible border (will be colored on hover/focus) */
+  border: solid 1px transparent;
+  border-radius: 4px;
+
+  /* size comes from text & padding (no width/height) */
+  padding: 0.25em 0.5em;
+
+  /* make sure colors have enough contrast! */
+  color: #ffffff;
+  background-color: #9555af;
+}
+.loaderImg {
+  width: 30px;
+  height: 30px;
+  position:absolute; 
+  bottom:0;      
+}
+
+.infoMessage {
+  color:#9555af;
+  font-size: 70%;
+}
+
+.loaderImg2 {
+  width: 30px;
+  height: 30px;
+  bottom:0;      
+}
+
 #app {
   font-family: 'Avenir', Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;

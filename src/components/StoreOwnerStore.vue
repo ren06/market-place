@@ -1,9 +1,23 @@
 <template>
     <div>
-        <h4>{{ getCurrentStoreOwner.name }} >> {{ currentStore.description }} <button v-on:click="back()">Back</button></h4>        
-        <h5>Balance {{ currentStore.balanceEth }} ETH <input v-model="withdrawAmount"><button v-on:click="withdraw(currentStore.index, withdrawAmount)"> Withdraw</button></h5>
-        <div> {{ infoMessage }} </div>
-        <button v-on:click="addProduct()">Add new product</button>
+        <p>{{ getCurrentStoreOwner.name }} > {{ currentStore.description }} <button v-on:click="back()">Go Back</button></p>
+        <div style="position:relative; font-size: 50%" >
+          Balance {{ currentStore.balanceEth }} ETH
+          <input size="4" v-model="withdrawAmount">
+          <button v-show="!isLoaderVisible" class="btn" v-on:click="withdraw(currentStore.index, withdrawAmount)"> Withdraw</button>
+          <img class="loaderImg" v-show="isLoaderVisible" src="@/assets/loader.svg" />          
+        </div>
+        <p>
+        <p style="font-size: 90%">Products</p>          
+        <div class="infoMessage"> {{ infoMessage }} </div>
+        <div style="position:relative; font-size: 50%">
+          Descr. <input size="20" v-model="newProductDescription">
+          Price <input size="3" v-model="newProductPrice"> ETH
+          Quantity <input size="4" v-model="newProductQuantity">
+          <button v-show="!isLoaderVisible" class="btn" v-on:click="addProduct(newProductDescription, newProductPrice, newProductQuantity)">Add new product</button>
+          <img class="loaderImg" v-show="isLoaderVisible" src="@/assets/loader.svg" />
+        </div>
+        <p>      
         <div class="wrapper"> 
           <div class="box">Id</div>
           <div class="box">Index</div>
@@ -35,25 +49,26 @@ export default {
   },
   data() {
     return {
-      withdrawAmount: 0
+      withdrawAmount: 1,
+      newProductDescription: 'New Product',
+      newProductPrice: 0.1,
+      newProductQuantity: 10
     }
   },
   computed: {
     ...mapState('storeOwnerState', ['currentStore']),
-    ...mapState(['infoMessage']),
+    ...mapState(['infoMessage', 'isLoaderVisible']),
     ...mapGetters(['getUserRole']),
     ...mapGetters('storeOwnerState', ['getProducts', 'getCurrentStoreProducts', 'getCurrentStoreOwner'])
   },  
   methods: {
-    ...mapMutations('storeOwnerState', ['SET_CURRENT_PRODUCT']
-    ),
-    ...mapActions([
-      'storeOwnerState/ACTION_SET_PRODUCTS', 'storeOwnerState/ACTION_ADD_STORE'
-    ]
-    ),
-    addProduct: function (storeName) {
+    ...mapMutations('storeOwnerState', ['SET_CURRENT_PRODUCT']),
+    ...mapMutations(['SET_INFO_MESSAGE', 'SET_IS_LOADER_VISIBLE']),        
+    ...mapActions(['storeOwnerState/ACTION_SET_PRODUCTS', 'storeOwnerState/ACTION_ADD_STORE']),
+    addProduct: function (newProductDescription, newProductPrice, newProductQuantity) {
       console.log('inside Method addProduct', status);
-      const payload = {description: 'My Product', price: Math.floor(Math.random() * 10) + 1, quantity: Math.floor(Math.random() * 10) + 1};
+      this.SET_IS_LOADER_VISIBLE(true);            
+      const payload = {description: newProductDescription, price: newProductPrice, quantity: newProductQuantity};
       this.$store.dispatch('storeOwnerState/ACTION_ADD_PRODUCT', payload);
     },
     manageProduct: function (product) {
@@ -63,7 +78,9 @@ export default {
     back: function() {
       router.replace({ name: 'store-owner' });
     },
-    withdraw: function (storeIndex, withdrawAmount) {  
+    withdraw: function (storeIndex, withdrawAmount) {
+      this.SET_IS_LOADER_VISIBLE(true);
+      this.SET_INFO_MESSAGE('');
       this.$store.dispatch('storeOwnerState/ACTION_WITHDRAW', {storeIndex, withdrawAmount});
     } 
   }

@@ -1,17 +1,20 @@
 <template>
     <div>
-        <h4>{{ getUserRole }}</h4>
-        <p><u>Product {{ currentProduct.index }} of Store {{ currentStore.description }} </u><button v-on:click="back()">Back</button></p>
-        <button v-on:click="saveProduct()">Save</button>
+        <p>{{ getCurrentStoreOwner.name }} >> {{ currentStore.description }} >> Product {{ currentProduct.index }} <button v-on:click="back()">Go Back</button></p>
+        <div class="infoMessage"> {{ infoMessage }} </div>
         <div class="wrapper"> 
             <div class="row"></div> 
-                <div class="box">Description</div><div class="box"><input v-model="description"></div>
+                <div class="box">Description</div><div class="box"><input size="20" v-model="description"></div>
             <div class="row"></div>                 
-                <div class="box">Price</div><div class="box"><input v-model="price"></div>
+                <div class="box">Price</div><div class="box"><input size="3" v-model="price"></div>
             <div class="row"></div>                 
-                <div class="box">Quantity</div><div class="box"><input v-model="quantity"></div>            
+                <div class="box">Quantity</div><div class="box"><input size="4" v-model="quantity"></div>            
         </div>
-        <button v-on:click="deleteProduct()">Delete</button>
+        <div style="margin: 0 auto; width: 100%; text-align: center;">
+          <button v-show="!isLoaderVisible" class="btn" v-on:click="saveProduct()">Save</button>
+          <img class="loaderImg" style="position: static" v-show="isLoaderVisible" src="@/assets/loader.svg" />
+          <button v-show="!isLoaderVisible" class="btn" v-on:click="deleteProduct(newProductDescription, newProductPrice, newProductQuantity)">Delete</button>
+        </div>
     </div>
 </template>
 
@@ -30,8 +33,9 @@ export default {
   },  
   computed: {
     ...mapState('storeOwnerState', ['currentStore', 'currentProduct']),
+    ...mapState(['infoMessage', 'isLoaderVisible']),    
     ...mapGetters(['getUserRole']),
-    ...mapGetters('storeOwnerState', ['getProducts', 'getCurrentStoreProducts']),
+    ...mapGetters('storeOwnerState', ['getProducts', 'getCurrentStoreProducts', 'getCurrentStoreOwner']),  
     description: {
       get () {
         return this.$store.state.storeOwnerState.currentProduct.description;
@@ -42,10 +46,10 @@ export default {
     },
     price: {
       get () {
-        return this.$store.state.storeOwnerState.currentProduct.price;
+        return this.$store.state.storeOwnerState.currentProduct.priceEth;
       },
       set (value) {
-        this.UPDATE_FIELD_CURRENT_PRODUCT({ name: 'price', value })
+        this.UPDATE_FIELD_CURRENT_PRODUCT({ name: 'priceEth', value })
       }
     },
     quantity: {
@@ -59,14 +63,19 @@ export default {
   },  
   methods: {
     ...mapMutations('storeOwnerState', ['UPDATE_FIELD_CURRENT_PRODUCT']),
+    ...mapMutations(['SET_INFO_MESSAGE', 'SET_IS_LOADER_VISIBLE']),       
     ...mapActions([
       'storeOwnerState/ACTION_SET_PRODUCTS', 'storeOwnerState/ACTION_ADD_STORE', 
       'storeOwnerState/ACTION_DELETE_PRODUCT', 'storeOwnerState/ACTION_UPDATE_PRODUCT'
     ]),
     deleteProduct: function () {
+      this.SET_INFO_MESSAGE('');
+      this.SET_IS_LOADER_VISIBLE(true);
       this.$store.dispatch('storeOwnerState/ACTION_DELETE_PRODUCT');      
     },
     saveProduct: function () {
+      this.SET_INFO_MESSAGE('');
+      this.SET_IS_LOADER_VISIBLE(true);
       this.$store.dispatch('storeOwnerState/ACTION_UPDATE_PRODUCT');      
     },
     back: function() {
@@ -77,28 +86,19 @@ export default {
 </script>
 
 <style scoped>
+
 .wrapper {
   display: grid;
-  /* grid-template-columns: repeat(3, minmax(50px, 1fr)); */
-  grid-template-columns: repeat(5, 1fr)
-  /* background-color: #fff;
-  color: #444;*/
-  /* max-width: 800px;  */
+  grid-template-columns: repeat(2, 1fr)
 }
 
 .row {
   grid-column: 1 / -1;
   display: grid;
-  grid-template-columns: repeat(5, 1fr)
+  grid-template-columns: repeat(2, 1fr)
 }
 
-/* div:nth-child(4) { grid-row-start: 2; }
-div:nth-child(5) { grid-row-start: 3; } */
-
 .box {
-  /* background-color: #444;
-  color: #fff; */
-  /* border-radius: 5px; */
   padding: 20px;
   font-size: 50%;
 }

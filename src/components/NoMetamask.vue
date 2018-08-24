@@ -7,11 +7,6 @@
 <script>
 export default {
     name: 'NoMetamask',
-    computed: {
-        // web3() {
-        //     return this.$store.state.web3;
-        // },
-    }
 };
 </script>
 
