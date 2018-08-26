@@ -13,8 +13,9 @@ The workflow would be the following after deploying a brand new contract:
 - A store owner on their home page can see the total amount they own through all their stores. They have to go to the page store to withdraw its amount
 
 Admin features:
-- The contract owner can add a new administrator
-- An administrator can deactivate a store owner
+- An administratro can add a new administrator
+- Only the contract owner can delete am administrator
+- An administrator can activate/deactivate a store owner
 - The contract owner can pause and unpause the contract
 
 2) Patterns
@@ -32,12 +33,12 @@ In a nutshell with the use of a mapping, it is impossible to know the keys witho
 
 I've tried to use Oraclize (installed via EthPM oraclize-api) to fetch the price of ETH in USD (it was working with Remix on Rinkeby) but did not have the time to integrate it with the MarketPlace contract. I also tried ethereum-bridge to test Oraclize locally, but did not manage to get it fully working (ethereum-bridge was receiving and displaying the result, but the contract did not reflect it)
 
-I am using an enum for role access to quickly know the current role of a user (used by UI), according to where its address is stored (in which mapping) in the contract
-
 b) UI
 ******
 Metamask is used to interact with the blockchain to sign transaction. A message is displayed if no Metamask is detected, or if the user not logged in.
+
 Vue.js has been used for the front end. I did not know Vue.js (or React/Angular) and I thought it would be a good challenge to learn it while doing this exercice.
 
-When the application loads, the first things is to initalise the web3 instance and the contract instance. I am using Vuex to maintain the store state, and vue-router to show the right components to the right user role and the navigation within the components. The use of actions with Vuex was perfect to handle asynchronous interactions with the blockchain.
+When the application loads, the first things is to initalise the web3 instance and the contract instance. I am using Vuex to maintain the store state, and vue-router to show the right components to the right user role and the navigation to more components. The use of actions with Vuex was perfect to handle asynchronous interactions with the blockchain.
 
+Changing Networks and Accounts withing Metamask should refresh the whole app, even though I've seen some bugs (in this case just refresh the browser page)

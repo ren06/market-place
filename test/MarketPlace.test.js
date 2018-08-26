@@ -3,23 +3,33 @@
 const MarketPlace = artifacts.require('MarketPlace')
 
 contract('MarketPlace', function(accounts) {
+  //Accounts used by the tests
   const admin1 = accounts[0]
   const storeOwner1 = accounts[6]
   const storeOwner2 = accounts[7]
-  const guest = accounts[8]
+  const guest = accounts[9]
 
-  //product setup
+  //Store owner names
+  const storeOwner1Name = 'Jack Daniel';
+  const storeOwner2Name = 'Joe Bloggs';
+  const storeOwner1New = 'Jane Doe';
+  const storeOwner1NewName = 'Jack Lloyd';
+
+  //product price
   const store0_product0_price = web3.toWei('0.1', 'ether');
   const store0_product0_newPrice = web3.toWei('1.2', 'ether');
   const store0_product1_price = web3.toWei('0.25', 'ether');
   const store0_product2_price = web3.toWei('0.5', 'ether');
+  const store1_product0_price = web3.toWei('0.2', 'ether');
 
+  //product quantities
   const productTotalQuantity0 = 10;
   const productTotalnewQuantity0 = 12;
   const productTotalQuantity1 = 20;
   const productTotalQuantity2 = 30;
   const productTotalQuantity3 = 40;
 
+  //product purchaes quantities
   const productBuyQuantity0 = 3;
   const productBuyQuantity1 = 5;
   const productBuyQuantity2 = 10;
@@ -33,15 +43,18 @@ contract('MarketPlace', function(accounts) {
     const marketPlace = await MarketPlace.deployed();
     console.log('*** List All Store Owners ***');
     let storeOwnerCount = await marketPlace.getStoreOwnersCount.call()
-    let res = ''
+    let res = '';
+    let storeOwners = [];
     if (storeOwnerCount.toNumber() === 0) {
       console.log('No store owners');
     }
     for (let i = 0; i < storeOwnerCount; i++) {
       let result = await marketPlace.getStoreOwnerAtIndex.call(i)
       res = res + `${result[0]} ${result[1]} ${result[3]} ${result[4]} |`
+      storeOwners.push({index: result[0], name: result[1], isActive: result[3], numberStores: result[4]});
     }
     console.log(res);
+    return storeOwners;
   }
 
   async function listStores(storeOwnerAddress) {
@@ -71,7 +84,8 @@ contract('MarketPlace', function(accounts) {
     console.log(res);
   }
 
-  //INIT THE CONTRACT
+  //Create two new store ower requests, the administrator approves one.
+  //This is to have in the tests one active store owner and one unactive
   before('Initialise 2 store owners and approve 1', async function () {
     //to generate a clean state: new()
     //To use same instant in each unit tests: deployed()
@@ -82,14 +96,16 @@ contract('MarketPlace', function(accounts) {
     //   if (!error) { console.log(log.event, log.args); }
     // }); 
 
-    await marketPlace.requestStoreOwner('Jack Daniels', {from: storeOwner1})
-    await marketPlace.requestStoreOwner('Joe Bloggs', {from: storeOwner2})
+    await marketPlace.requestStoreOwner(storeOwner1Name, {from: storeOwner1})
+    await marketPlace.requestStoreOwner(storeOwner2Name, {from: storeOwner2})
 
     await marketPlace.activateStoreOwner(storeOwner1, {from: admin1})
     
+    //Display the current store owners in the log
     await listStoreOwners()
   })
 
+  //This test verifies that every account used for the tests has the expected role
   it('Should check user access', async() => {
     const marketPlace = await MarketPlace.deployed();
    
@@ -108,7 +124,8 @@ contract('MarketPlace', function(accounts) {
     assert.equal(result.toNumber(), 3, 'storeOwner1 is not an active StoreOwner ' + result);
   })
 
-  it('There should be 1 active store owners out of 2, change his name', async() => {
+  //This test verifies that the store owners have the right status
+  it('Check all store owners, there should be one active', async() => {
     const marketPlace = await MarketPlace.deployed();
     const expected = 1;
     let activeStoreOwner = 0;
@@ -117,7 +134,7 @@ contract('MarketPlace', function(accounts) {
 
     for (let i = 0; i < storeOwnerCount.toNumber(); i++) {
       let result = await marketPlace.getStoreOwnerAtIndex.call(i)
-      if (result[3] === true) {
+      if (result[3] === true) { //isActive
         console.log('Active store owner:', result[1]);
         activeStoreOwner++;
       }
@@ -125,16 +142,17 @@ contract('MarketPlace', function(accounts) {
     assert.equal(activeStoreOwner, expected, `Number of active store owner not expected`);
   })
 
+  //This test verifies that updating a store owner works correctly
   it('Should update a store owner name, retrieve its info and check it is updated', async() => {
     const marketPlace = await MarketPlace.deployed();
-    const newName = 'Jack Daniel';
-    
-    await marketPlace.updateStoreOwner(newName, {from: storeOwner1});
+   
+    await marketPlace.updateStoreOwner(storeOwner1NewName, {from: storeOwner1});
     const storeOwner = await marketPlace.getStoreOwnerAtAddress.call(storeOwner1);
 
-    assert.equal(storeOwner[1], newName, `The name was not updated properly`);
+    assert.equal(storeOwner[1], storeOwner1NewName, `The name was not updated properly`);
   })
 
+  //This test verifiers that there is one administrator created when the contract is deployed
   it('There should be one admin by defaut (contract owner)', async() => {    
     const expected = 1;
     const marketPlace = await MarketPlace.deployed();
@@ -143,17 +161,31 @@ contract('MarketPlace', function(accounts) {
     assert.equal(result.toNumber(), expected, 'Number of admin not expected');
   })
 
+  //This test verifies that deleting a store owner and adding a new one works correclty
   it('Should delete a store owner and add it again', async() => {    
     const marketPlace = await MarketPlace.deployed();
  
     await marketPlace.deleteStoreOwner(storeOwner1, {from: admin1})
- 
-    await marketPlace.requestStoreOwner('Jane Doe', {from: storeOwner1})
+    
+    //Store owner 1 re-request with a different name
+    await marketPlace.requestStoreOwner(storeOwner1New, {from: storeOwner1})
     await marketPlace.activateStoreOwner(storeOwner1, {from: admin1})
  
-    await listStoreOwners()
+    const storeOwners = await listStoreOwners();
+
+    //verifies Jane Doe exists and Jack Lloyd does not exist anymore
+    let storeOwner = storeOwners.find(o => o.name === storeOwner1New);
+    console.log('found:', storeOwner);
+    assert.equal(storeOwner.name === storeOwner1New, true, 'New store owner not added, did not find ' + storeOwner1New);
+
+    storeOwner = storeOwners.find(o => o.name === storeOwner1NewName);
+    console.log('should be null', storeOwner);
+    assert.equal(!storeOwner, true, 'The store owner should have been deleted');
   })
 
+  //Check that store owners can add stores and add products to them
+  //It also removes and add a product
+  //Check that updates to product work
   it('Should Add 2 stores and some products, remove one product', async() => {
     const marketPlace = await MarketPlace.deployed();
     
@@ -163,8 +195,6 @@ contract('MarketPlace', function(accounts) {
     await marketPlace.addProduct(0, 'Product0', store0_product0_price, productTotalQuantity0, {from: storeOwner1})
     await marketPlace.addProduct(0, 'Product1', store0_product1_price, productTotalQuantity1, {from: storeOwner1})
     await marketPlace.addProduct(0, 'Product2', store0_product2_price, productTotalQuantity2, {from: storeOwner1})
-    //await listStoreOwners();
-    //await listProducts(storeOwner1, 0)
 
     let productCount = await marketPlace.getProductsCount.call(storeOwner1, 0);
 
@@ -194,6 +224,9 @@ contract('MarketPlace', function(accounts) {
     assert.equal(result[3].toNumber(), productTotalnewQuantity0, 'The quantity was not updated')
   })
 
+  //A user buys some products from 1 store, it checks that the quantities are updates correctly.
+  //Check that it's not possible to buy more products than available
+  //Check that the balances of the stores correspond to all the purchases made
   it('Should buy several products, test quantity and check store owner balance', async() => {
     const marketPlace = await MarketPlace.deployed();
     
@@ -248,7 +281,11 @@ contract('MarketPlace', function(accounts) {
     assert.equal(product[3].toNumber(), 0, 'The stock is not 0');
   })
 
-  it('Should perform 2 Withdraw and verify it is not possible to withdraw more once balance is 0', async() => {  
+  //More products are bought from another store, still belonging to the same store owner
+  //The balance of both stores should match all the purchases made on theses two stores
+  //The store owner withdraws the balance of a store in two withdraws.
+  //Check it's not possible to withdraw more than the balance
+  it('Buy more from other store, verify balances of stores match purchases, perform 2 Withdraws', async() => {  
     const marketPlace = await MarketPlace.deployed();
   
     await marketPlace.addProduct(1, 'Store1Product0', store1_product0_price, productTotalQuantity3, {from: storeOwner1})
@@ -259,8 +296,6 @@ contract('MarketPlace', function(accounts) {
     await marketPlace.buyProduct(storeOwner1, 1, 0, productBuyQuantity2, {from: guest, value: value});
 
     //get balance of store 1
-    // function getStoreAtIndex(address storeOwnerAddress, uint index) public view 
-    //returns(uint _index, string _description, uint _numberProducts, uint _balance, address _storeOwner){
     let store1 = await marketPlace.getStoreAtIndex(storeOwner1, 1);
     const store1BalanceBn = store1[3];
     const store1Balance = store1BalanceBn.toNumber();

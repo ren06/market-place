@@ -7,6 +7,7 @@ contract('MarketPlace', function(accounts) {
   const admin3 = accounts[3]
   const admin4 = accounts[4]
 
+  //This function display the current status of all administartors stores in the contract
   async function listAdministrators(truncateAddress = false) {
     const marketPlace = await MarketPlace.deployed();
     console.log('*** List All Administrators ***');
@@ -17,7 +18,6 @@ contract('MarketPlace', function(accounts) {
       console.log('No admin - impossible at least owner');
     }
     for (let i = 0; i < adminCount; i++) {
-      //(uint _index, string _name, address _addr, bool _isActive, uint _numberStores
       let result = await marketPlace.getAdministratorAtIndex.call(i)
       let address = result[1]
       if (truncateAddress) {
@@ -34,6 +34,7 @@ contract('MarketPlace', function(accounts) {
     console.log('Idxs:', indexes);
   }  
 
+  //This test verifies that only the contract owner can delete an existing administrator
   it('Should only be the contract owner that can delete another admin', async() => {
     const marketPlace = await MarketPlace.deployed();
     let success = 0;
@@ -71,6 +72,7 @@ contract('MarketPlace', function(accounts) {
     assert.equal(success, expected, `Error when deleting and adding an administrator`);
   })  
 
+  //This test verifies that only the contract owner can pause the contract (and that another adminisrator cannot)
   it('Should verify that the contract is pausable by owner', async() => {
     const marketPlace = await MarketPlace.deployed();
     const expected = 1;
@@ -95,6 +97,8 @@ contract('MarketPlace', function(accounts) {
     assert.equal(success, expected, `Error when calling the method pause`);
   })
 
+  //Double check that once the contract is paused a function that has the modifier
+  //whenNotPaused cannot be executed (throws)
   it('Should check that a function that requires whenNotPaused cannot run anymore', async() => {
     const marketPlace = await MarketPlace.deployed();
     const expected = 0;
@@ -110,6 +114,8 @@ contract('MarketPlace', function(accounts) {
     assert.equal(success, expected, `Error should not be able to call function`);
   })
 
+  //Once the contract is unpaused, verifies that a function with the modifier whenNotPaused
+  //can now be executed
   it('Should Unpause and execute a function', async() => {
     const marketPlace = await MarketPlace.deployed();
     const expected = 2;
