@@ -5,94 +5,93 @@ An Ethereum based online market place application
 
 Steps for a new Ubuntu installation: (If you have already your environment setup you can jump to step 7)
 
-1. Install curl
-$ `sudo apt install curl`
+1. Install curl  
+`sudo apt install curl`  
 
-2. Install node.js
-$ `curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash`
-$ `sudo apt-get install -y nodejs`
+2. Install node.js  
+`curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash`  
+`sudo apt-get install -y nodejs`  
 
-3. Install build tools (without them you may get an error when running npm install with node-gyp)
-$ `sudo apt-get install build-essential`
+3. Install build tools (without them you may get an error when running npm install with node-gyp)  
+`sudo apt-get install build-essential`  
 
-4. Install Truffle
-$ `sudo npm install -g truffle`
+4. Install Truffle  
+`sudo npm install -g truffle`  
 
-5. Install Ganache (or the application)
-$ `sudo npm install -g ganache-cli`
+5. Install Ganache (or the application)  
+`sudo npm install -g ganache-cli`  
 
-6. Install Git
-$ `sudo apt install git`
+6. Install Git  
+`sudo apt install git`  
 
-7. clone the MarketPlace project
-$ `git clone "https://github.com/ren06/market-place.git"`
+7. clone the MarketPlace project  
+`git clone "https://github.com/ren06/market-place.git"`  
 
-8. Install dependencies
-$ `cd market-palce && npm install`
+8. Install dependencies  
+`cd market-palce && npm install`  
 
-9. Run Ganache (blocking)
-$ `ganache-cli`
+9. Run Ganache (blocking)  
+`ganache-cli`  
 
-10. In a new terminai deploy the contract (by default on Ganache)
-$ `truffle migrate`
+10. In a new terminai deploy the contract (by default on Ganache)  
+`truffle migrate`  
  
-11. Run the Vue.js app:
-$ `run npm dev`
+11. Run the Vue.js app:  
+`run npm dev` 
 
-12. Install metamaks on Firefox or Chrome at metamask.io
+12. Install metamaks on Firefox or Chrome at metamask.io  
 
-13. Import in Metamask the accounts by using the menmonic words of the running Ganache instance
+13. Import in Metamask the accounts by using the menmonic words of the running Ganache instance  
 
-14. Have fun with the app at localhost:8080
+14. Have fun with the app at `http://localhost:8080 ` 
 
-You should add a few accounts into your Metamask to simulate different users (Admin, Store Owner, User) and see how they interact with each other
+You should add a few accounts into your Metamask to simulate different users (Admin, Store Owner, User) and see how they interact with each other  
 
-If you're testing locally with Ganache don't forget to clear the transaction history of Metamask (otherwise you will get an error about the wrong nonce)
+If you're testing locally with Ganache don't forget to clear the transaction history of Metamask (otherwise you will get an error about the wrong nonce)  
 
-Note: if you want to have some data already created, copy the files in "migrations_data" into "migration". Don't do this if you want to run unit tests. Bear in mind that executing these migration may create unexpected behaviour when running unit tests (the unit tests are run after the migrations)
+Note: if you want to have some data already created, copy the files in "migrations_data" into "migration". Don't do this if you want to run unit tests. Bear in mind that executing these migration may create unexpected behaviour when running unit tests (the unit tests are run after the migrations)  
 
 ##Testing
 
-Test the contract MarketPlace with:
-$ `truffle test`
+Test the contract MarketPlace with:  
+`truffle test`  
 
-The first test file covers all the functions of the MarketPlace contract. It uses some methods to display the current state of the contract, to list all administrators, store owners, products (for a store owner) which can be useful for troubleshooting.
+The first test file covers all the functions of the MarketPlace contract. It uses some methods to display the current state of the contract, to list all administrators, store owners, products (for a store owner) which can be useful for troubleshooting.  
 
-The second test file covers all tests regarding the circuit breaker and verifies admins/owner privileges
+The second test file covers all tests regarding the circuit breaker and verifies admins/owner privileges  
 
 ##IFPS
 
-I tried to deploy on IPFS but there seem to be a webpack problem. Some js files are not found. The build says: "Tip: built files are meant to be served over an HTTP server. Opening index.html over file:// won't work." Therefore I don't think I can run the website with IPFS (it has to be static files)
+I tried to deploy on IPFS but there seem to be a webpack problem. Some js files are not found. The build says: "Tip: built files are meant to be served over an HTTP server. Opening index.html over file:// won't work." Therefore I don't think I can run the website with IPFS (it has to be static files)  
 It's accessible at: http://gateway.ipfs.io/ipfs/QmfRb9sc2ddKYn5cZhbgWhANdwqNot3zHTwqthfSWd5Fxc (My AWS Linux box is running the daemon making sure it's there)
-Here are the steps:
+Here are the steps:  
 
-First we need to build the Vue.js app to generate the files (in /dist folder) to share via IFPS
-$ `npm run build`
+First we need to build the Vue.js app to generate the files (in /dist folder) to share via IFPS  
+`npm run build`   
 
-Installing IPFS:
-$ `tar xvfz go-ipfs.tar.gz`
-$ `cd go-ipfs`
-$ `./install.sh`
+Installing IPFS:  
+`tar xvfz go-ipfs.tar.gz`  
+`cd go-ipfs`  
+`./install.sh`  
 
-Launch the daemon
-$ `ipfs daemon`
+Launch the daemon  
+`ipfs daemon`  
 
-In another terminal:
-$ `ipfs swarm peers`
+In another terminal:  
+`ipfs swarm peers`  
 
-Add the dist folder generated during te build
-$ `ipfs add -r dist/`
+Add the dist folder generated during te build  
+`ipfs add -r dist/`  
 
-Copy that last hash and execute:
-$ `ipfs name publish Qm............. ` (last hash generated by previous command, for the dist folder)
+Copy that last hash and execute: 
+`ipfs name publish Qm............. ` (last hash generated by previous command, for the dist folder)  
 
-The data is accessible via gateway.ipfs.io/ipfs/Qm.............
+The data is accessible via gateway.ipfs.io/ipfs/Qm.............  
 
 ##Rinkeby
 
-By running
-$ `truffle migrate --network rinkeby `
-the contracts will be deployed to this Rinkeby network. It's using an account whose seed words are specified in mnemonic.js (please don't empty the account with lots of deployments!)
-
-You can access the contract on Rinkeby at https://rinkeby.etherscan.io/address/0xf95baa735f7e941d4e2575b18eb236987793b7fb (it was deployed using Truffle and Infura with the help of the module truffle-hdwallet-provider)
+By running  
+`truffle migrate --network rinkeby `  
+the contracts will be deployed to this Rinkeby network. It's using an account whose seed words are specified in mnemonic.js (please don't empty the account with lots of deployments!)  
+You can access the contract on Rinkeby at https://rinkeby.etherscan.io/address/0xf95baa735f7e941d4e2575b18eb236987793b7fb (it was deployed using Truffle and Infura with the help of the module truffle-hdwallet-provider)  
 
