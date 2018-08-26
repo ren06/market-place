@@ -1,6 +1,6 @@
 <template>
     <div>
-        <p><u>Product {{ currentProduct.description }} of Store {{ currentStore.description }}</u><button v-on:click="back()">Go Back</button></p>     
+        <p>Product <i>{{ currentProduct.description }} </i> of Store <i> {{ currentStore.description }}</i><button v-on:click="back()">Go Back</button></p>     
         <div class="infoMessage"> {{ infoMessage }} </div>
         <div class="wrapper"> 
             <div class="row"></div> 

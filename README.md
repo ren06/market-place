@@ -51,7 +51,7 @@ If you're testing locally with Ganache don't forget to clear the transaction his
 
 Note: if you want to have some data already created, copy the files in "migrations_data" into "migration". Don't do this if you want to run unit tests. Bear in mind that executing these migration may create unexpected behaviour when running unit tests (the unit tests are run after the migrations)  
 
-##Testing
+## Testing
 
 Test the contract MarketPlace with:  
 `truffle test`  
@@ -60,7 +60,7 @@ The first test file covers all the functions of the MarketPlace contract. It use
 
 The second test file covers all tests regarding the circuit breaker and verifies admins/owner privileges  
 
-##IFPS
+## IFPS
 
 I tried to deploy on IPFS but there seem to be a webpack problem. Some js files are not found. The build says: "Tip: built files are meant to be served over an HTTP server. Opening index.html over file:// won't work." Therefore I don't think I can run the website with IPFS (it has to be static files)  
 It's accessible at: http://gateway.ipfs.io/ipfs/QmfRb9sc2ddKYn5cZhbgWhANdwqNot3zHTwqthfSWd5Fxc (My AWS Linux box is running the daemon making sure it's there)
@@ -88,7 +88,7 @@ Copy that last hash and execute:
 
 The data is accessible via gateway.ipfs.io/ipfs/Qm.............  
 
-##Rinkeby
+## Rinkeby
 
 By running  
 `truffle migrate --network rinkeby `  

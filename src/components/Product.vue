@@ -79,6 +79,7 @@ export default {
       this.$store.dispatch('storeOwnerState/ACTION_UPDATE_PRODUCT');      
     },
     back: function() {
+      this.SET_INFO_MESSAGE('');
       router.replace({ name: 'store-owner-store' });
     }
   }

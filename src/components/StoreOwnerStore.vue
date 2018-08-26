@@ -76,6 +76,7 @@ export default {
       router.replace({ name: 'product' });
     },
     back: function() {
+      this.SET_INFO_MESSAGE('');
       router.replace({ name: 'store-owner' });
     },
     withdraw: function (storeIndex, withdrawAmount) {

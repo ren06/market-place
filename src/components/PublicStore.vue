@@ -1,7 +1,6 @@
 <template>
     <div>
-        <h4>{{ getUserRole }}</h4>
-        <p>Products for Store {{ currentStore.description }} <button v-on:click="back()">Go Back</button></p>
+        <p>Products for Store: {{ currentStore.description }} <button v-on:click="back()">Go Back</button></p>
         <div class="wrapper"> 
           <div class="box">Id</div>
           <div class="box">Index</div>
