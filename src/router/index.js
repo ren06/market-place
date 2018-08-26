@@ -7,6 +7,7 @@ import StoreOwnerStore from '@/components/StoreOwnerStore';
 import PublicStore from '@/components/PublicStore';
 import Product from '@/components/Product';
 import ProductBuy from '@/components/ProductBuy';
+import NoMetamask from '@/components/NoMetamask';
 import store from '../store';
 
 //to make sure the account is set before executing any contract calls
@@ -111,5 +112,10 @@ export default new Router({
       beforeEnter: checkCurrentProductSet,
       component: ProductBuy
     },
+    {  //No Metamask
+        path: '/no-metamask',
+        name: 'no-metamask',
+        component: NoMetamask
+      },    
   ]
 });

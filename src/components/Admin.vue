@@ -29,10 +29,15 @@
         <div class="wrapper2">
           <div class="box">Address</div>
           <div class="box">Is owner?</div>
+          <div class="box"></div>
           <div class="row2" v-for="(admin, index) in administrators" v-bind:key="index">
             <!-- <div class="box">{{ admin.index }}</div> -->
             <div class="box">{{ admin.address }}</div>
             <div class="box">{{ admin.isOwner }}</div>
+            <div v-if="admin.isOwner" class="" style="position:relative">
+                <button v-show="!isLoaderVisible" class="btn" v-on:click="toggleContractState()"> {{ isContractPaused? 'Unpause' : 'Pause' }}</button>
+                <img class="loaderImg2" align="middle" v-show="isLoaderVisible" src="@/assets/loader.svg" />
+            </div>
           </div>
         </div>        
     </div>
@@ -46,6 +51,7 @@ export default {
     console.log('Admin.vue Mounted');
     this.$store.dispatch('ACTION_SET_STORE_OWNERS');
     this.$store.dispatch('ACTION_SET_ADMINISTRATORS');
+    this.$store.dispatch('ACTION_SET_IS_CONTRACT_PAUSED');
   },
   data() {
     return {
@@ -53,15 +59,19 @@ export default {
     }
   },  
   computed: {
-    ...mapState(['administrators', 'isLoaderVisible', 'account']),
+    ...mapState(['administrators', 'isLoaderVisible', 'account', 'isContractPaused']),
     ...mapGetters(['getUserRole', 'getStoreOwners'])
   },  
   methods: {
     ...mapMutations(['SET_IS_LOADER_VISIBLE']),    
-    ...mapActions(['ACTION_SET_STORE_OWNER_STATUS', 'ACTION_SET_ADMINISTRATORS', 'ACTION_ADD_ADMINISTRATOR']),
+    ...mapActions(['ACTION_SET_STORE_OWNER_STATUS', 'ACTION_SET_ADMINISTRATORS', 'ACTION_ADD_ADMINISTRATOR', 'ACTION_TOGGLE_CONTRACT_STATUS']),
     toggleStoreOwnerStatus: function (storeOwnerAddress, status) {
       this.SET_IS_LOADER_VISIBLE(true);
       this.ACTION_SET_STORE_OWNER_STATUS({storeOwnerAddress, status});
+    },
+    toggleContractState: function () {
+      this.SET_IS_LOADER_VISIBLE(true);
+      this.ACTION_TOGGLE_CONTRACT_STATUS({status});
     },
     addAdministrator: function(newAdminAddress) {
       this.ACTION_ADD_ADMINISTRATOR(newAdminAddress);
@@ -86,13 +96,13 @@ export default {
 
 .wrapper2 {
   display: grid;
-  grid-template-columns: 1fr 1fr
+  grid-template-columns: 1fr 150px 1fr
 }
 
 .row2 {
   grid-column: 1 / -1;
   display: grid;
-  grid-template-columns: 1fr 1fr
+  grid-template-columns: 1fr 150px 1fr
 }
 
 .box {

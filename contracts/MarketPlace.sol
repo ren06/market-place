@@ -15,7 +15,7 @@ contract MarketPlace is Ownable, Pausable {
     //Admin data
     struct Administrator {
         uint index;
-        address addr;
+        address addr;        
     }
 
     mapping (address => Administrator) private administrators;

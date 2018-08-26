@@ -1,0 +1,32 @@
+
+/* eslint-disable camelcase */
+const OracleETHPrice = artifacts.require('OracleETHPrice')
+
+contract('OracleETHPrice', function(accounts) {
+  const admin1 = accounts[0]
+ 
+  it('Should fetch ETH Price in USD', async function () {
+
+    //Only works on a public network
+    //To use Oraclize with Ganache the ethereum bridge must be used https://github.com/oraclize/ethereum-bridge
+
+    const priceCall = web3.toWei('0.1', 'ether');
+
+    //to generate a clean state: new()
+    //To use same instant in each unit tests: deployed()
+    const oracle = await OracleETHPrice.deployed()
+
+    const AllEvents = await oracle.allEvents();
+    AllEvents.watch(function(error, log) { 
+      if (!error) { console.log(log.event, log.args); }
+    }); 
+    let price = await oracle.ETHUSD.call();
+    console.log('Current price:', price);
+
+    await oracle.update({from: admin1, value: priceCall})
+    price = await oracle.ETHUSD.call();
+    console.log('Current price:', price);    
+
+    assert.equal(price.length > 0, true, 'Did no get the ETHUSD Price');
+  })
+});

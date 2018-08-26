@@ -157,7 +157,6 @@ const storeOwnerStateModule = {
           console.log('buyProduct function call mined', result);
         }).catch((err) => {
           commit('SET_INFO_MESSAGE', 'Error buying Prodcut', { root: true })
-          //rootState.commit('SET_INFO_MESSAGE', 'Error buying Prodcut');
           console.log(err);
         });
 

@@ -13,7 +13,6 @@ contract('MarketPlace', function(accounts) {
   const store0_product0_newPrice = web3.toWei('1.2', 'ether');
   const store0_product1_price = web3.toWei('0.25', 'ether');
   const store0_product2_price = web3.toWei('0.5', 'ether');
-  const store1_product0_price = web3.toWei('0.35', 'ether');
 
   const productTotalQuantity0 = 10;
   const productTotalnewQuantity0 = 12;

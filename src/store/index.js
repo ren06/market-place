@@ -13,6 +13,8 @@ const MarketPlace = truffleContract(marketPlaceJson);
 let LogAdminAddAdmin = null;
 let LogStoreOwnerStatusChanged = null;
 let LogStoreOwnerRequest = null;
+let Pause = null;
+let Unpause = null;
 
 Vue.use(Vuex);
 
@@ -23,6 +25,7 @@ const store = new Vuex.Store({
   },
   state: {
     userRole: null, //0 Guest, 1 Administrator, 2 Inactive Store Ower, 3 Active Store Owner
+    isMetamaskInstalled: true,
     account: null,
     currentNetwork: null,
     accountBalance: null,
@@ -31,6 +34,7 @@ const store = new Vuex.Store({
     currentUsdPrice: null,
     etherscanBase: null,
     administrators: [],
+    isContractPaused: null,
     //UI stuff
     currentValue: '',
     storeOwners: [],
@@ -71,6 +75,9 @@ const store = new Vuex.Store({
     },    
   },
   mutations: {
+    SET_IS_METAMASK_INSTALLED: (state, value) => {
+      state.isMetamaskInstalled = value;
+    },
     SET_IS_LOADER_VISIBLE: (state, value) => {
       state.isLoaderVisible = value;
     },
@@ -137,6 +144,9 @@ const store = new Vuex.Store({
     SET_CONTRACT: (state, MarketPlace) => {
       state.MarketPlace = MarketPlace;
     },
+    SET_IS_CONTRACT_PAUSED: (state, isContractPaused) => {
+        state.isContractPaused = isContractPaused;
+    }
   },
   //Calling mutations directly in the component is for synchronous events.
   //Should you need asyncronous functionality, you use Actions.
@@ -196,6 +206,62 @@ const store = new Vuex.Store({
             }).catch((err) => { console.log(err); });    
         });
       });  
+    },    
+    ACTION_TOGGLE_CONTRACT_STATUS: ({ commit, state, dispatch }) => {
+        console.log('inside ACTION_TOGGLE_CONTRACT_STATUS')
+        state.MarketPlace.deployed().then((contract) => {
+            contract.paused.call().then(isPaused => {
+                //UNPAUSE contract
+                if(isPaused){
+                    if (!Unpause) {
+                        Unpause = contract.Pause();
+                        Unpause.watch(function(error, result) {
+                          if (error) {
+                            console.log(error);
+                          } else {
+                            console.log('Unpause event caught', result);
+                            commit('SET_IS_CONTRACT_PAUSED', false);
+                          }
+                        });
+                    }
+
+                    contract.unpause({from: state.account}).then((result) => {
+                        console.log('buyProduct function call mined', result);
+                        commit('SET_IS_CONTRACT_PAUSED', false);
+                        commit('SET_IS_LOADER_VISIBLE', false);
+                      })
+                }
+                else{
+                    //PAUSE Contract
+                    if (!Pause) {
+                        Pause = contract.Pause();
+                        Pause.watch(function(error, result) {
+                          if (error) {
+                            console.log(error);
+                          } else {
+                            console.log('Pause event caught', result);
+                            commit('SET_IS_CONTRACT_PAUSED', true);
+                            commit('SET_IS_LOADER_VISIBLE', false);
+                          }
+                        });
+                    }
+
+                    contract.pause({from: state.account}).then((result) => {
+                        console.log('buyProduct function call mined', result);
+                        commit('SET_IS_CONTRACT_PAUSED', false);
+                    })
+                }
+            });
+        });
+    },
+    ACTION_SET_IS_CONTRACT_PAUSED: ({ commit, state, dispatch }, value) => {
+        console.log('inside ACTION_SET_IS_CONTRACT_PAUSED')
+        state.MarketPlace.deployed().then((contract) => {
+            contract.paused.call().then(isPaused => {
+                console.log('Contract paused?:', isPaused);
+                commit('SET_IS_CONTRACT_PAUSED', isPaused);
+            });
+        });
     },
     ACTION_SET_ALL_STORES: ({ commit, state, dispatch }, value) => {
       console.log('inside ACTION_SET_ALL_STORES')  
@@ -300,9 +366,7 @@ const store = new Vuex.Store({
                     case 0: routeName = 'home'; break;
                     case 1: routeName = 'admin'; break;  
                     case 2: routeName = 'store-owner'; break;
-                    case 3: routeName = 'store-owner'; 
-                      dispatch('storeOwnerState/ACTION_SET_CURRENT_STORE_OWNER');
-                      break;
+                    case 3: routeName = 'store-owner'; dispatch('storeOwnerState/ACTION_SET_CURRENT_STORE_OWNER'); break;
                     default: routeName = '/'; break;
                 }
                 console.log('After use role set, navitaging to', routeName);
@@ -331,8 +395,10 @@ const store = new Vuex.Store({
       });      
     },         
     ACTION_GET_CURRENT_NETWORK: ({commit, dispatch, state}) => {
+     
       getNetIdString()
         .then((currentNetwork) => {
+          console.log('Current network:', currentNetwork);
           commit('SET_CURRENT_NETWORK', currentNetwork);
         });
       getEtherscanAddress()
@@ -352,9 +418,7 @@ const store = new Vuex.Store({
     ACTION_INIT_APP: ({commit, dispatch, state}, web3) => {
       //dispatch('ACTION_GET_USD_PRICE');
     
-      console.log(MarketPlace);
       console.log(web3.version);
-      
       console.log(web3.currentProvider);
 
       MarketPlace.setProvider(web3.currentProvider);
@@ -381,16 +445,24 @@ const store = new Vuex.Store({
       dispatch('ACTION_GET_CURRENT_NETWORK');
 
       web3.eth.getAccounts().then((accounts) => {
+          
           let account = accounts[0];
-
+          
+          if(accounts.length == 0){
+            //router.push({name: 'no-metamask', params: {isInstalled: true}});
+            console.log('Metamask IS installed')
+            commit('SET_IS_METAMASK_INSTALLED', true);
+            router.push('no-metamask');
+          }
+          
           const setAccountAndBalance = (account) => {
-            return web3.eth.getBalance(account) .then((balance) => {
+            return web3.eth.getBalance(account).then((balance) => {
                 let accountBalance = Web3.utils.fromWei(balance);
                 // store the account details                
                 commit('SET_ACCOUNT', {account, accountBalance});
                 console.log('Dispatching ACTION_SET_USER_ROLE...');
-                dispatch('ACTION_SET_USER_ROLE');
-              });
+                dispatch('ACTION_SET_USER_ROLE');                
+              }).catch((err) => { console.log(err)});
           };
 
           const refreshHandler = () => {
@@ -399,9 +471,10 @@ const store = new Vuex.Store({
                   console.log(`Account changed from: ${account} to ${updatedAccounts[0]}`);
                   account = updatedAccounts[0];
                   commit('resetState');
+                  router.push('/');
                   return setAccountAndBalance(account);
                 }
-              });
+            });
           };
 
           // Every second check if the main account has changed
@@ -410,10 +483,12 @@ const store = new Vuex.Store({
           if (account) {
             return setAccountAndBalance(account);
           }
-        })
-        .catch(function (error) {
+        }).catch(function (error) {
           console.log('ERROR - account locked', error);
-          // TODO handle locked metamask account
+          //Show the user the message to install Metamask
+          console.log('No metamask installed')
+          commit('SET_IS_METAMASK_INSTALLED', false);
+          router.push('no-metamask');          
         });
     },
   }
